@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var fs = require('fs');
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -8,7 +9,11 @@ app.use(function(req, res, next) {
   });
 
 app.get('/image', (req, res) => {
-    res.sendFile(__dirname + '/images/10425156_10101783917532015_8637296692260815835_n.jpg');
+    fs.readdir(__dirname+ '/images', (err, files) => {
+        if (err) throw err;
+        let randomFileIndex = Math.floor(Math.random()*files.length)
+        res.sendFile(__dirname + '/images/' + files[randomFileIndex]);
+    });
 });
 
 app.listen(10000, () => {

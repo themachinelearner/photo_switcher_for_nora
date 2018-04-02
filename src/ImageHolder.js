@@ -1,10 +1,18 @@
 import React from 'react'
 
+const outerDivStyle = {
+    position: 'absolute',
+    width: '100%',
+    height: '100%'
+};
+
 const imageBoxStyle={
     marginTop: '50px',
     marginLeft: 'auto',
     marginRight: 'auto',
-    display: 'block'
+    display: 'block',
+    maxWidth: '80vw',
+    maxHeight: '80vh'
 };
 
 class ImageHolder extends React.Component {
@@ -12,16 +20,20 @@ class ImageHolder extends React.Component {
         super(props);
         this.state={
             currentImage: '',
-            nextImage: ''
+            nextImage: '',
+            containerBackgroundColor: '#FFFFFF'
         };
     }
 
     switchImage() {
-        if (this.state.nextImage !== '') {
+        if (this.state.nextImage !== "") {
+            let currentImageObjectURL = this.state.currentImage;
             this.setState ({
                 currentImage: this.state.nextImage
             });
+            URL.revokeObjectURL(currentImageObjectURL);
             this.fetchNextImage();
+            this.shuffleBackgroundColor();
         }
     }
 
@@ -31,9 +43,11 @@ class ImageHolder extends React.Component {
             return res.blob();
         })
         .then(resBlob => {
+            let currentImageObjectURL = this.state.nextImage;
             this.setState({
                 nextImage: URL.createObjectURL(resBlob)
             });
+            URL.revokeObjectURL(currentImageObjectURL);
         })
     }
 
@@ -47,12 +61,23 @@ class ImageHolder extends React.Component {
                 currentImage: URL.createObjectURL(resBlob)
             });
         })
+        this.fetchNextImage();
+    }
+
+    generateBackgroundColor() {
+        return '#'+Math.floor(Math.random()*16777215).toString(16);
+    }
+
+    shuffleBackgroundColor() {
+        this.setState({
+            containerBackgroundColor: this.generateBackgroundColor()
+        });
     }
 
     render() {
         return(
-            <div> {/*Need to implmenet this outer div always having focus and onkeydown triggering switch image*/}
-                <img src={this.state.currentImage} alt='something for Nora' style={imageBoxStyle} />
+            <div style={Object.assign({}, outerDivStyle, {backgroundColor: this.state.containerBackgroundColor})} onClick={this.switchImage.bind(this)}>
+                <img onClick={this.switchImage.bind(this)} src={this.state.currentImage} alt='something for Nora' style={imageBoxStyle} />
             </div>
         );
     }
