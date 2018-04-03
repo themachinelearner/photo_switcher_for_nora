@@ -1,4 +1,5 @@
 import React from 'react'
+import resolveExif from 'exif-normalizer-blob';
 
 const outerDivStyle = {
     position: 'absolute',
@@ -10,9 +11,9 @@ const imageBoxStyle={
     marginTop: '50px',
     marginLeft: 'auto',
     marginRight: 'auto',
-    display: 'block',
-    maxWidth: '80vw',
-    maxHeight: '80vh'
+    maxHeight: '75vh',
+    maxWidth: '75vw',
+    display: 'block'
 };
 
 class ImageHolder extends React.Component {
@@ -31,23 +32,26 @@ class ImageHolder extends React.Component {
             this.setState ({
                 currentImage: this.state.nextImage
             });
+            this.shuffleBackgroundColor();
             URL.revokeObjectURL(currentImageObjectURL);
             this.fetchNextImage();
-            this.shuffleBackgroundColor();
         }
     }
 
-    fetchNextImage() { //consolidate this into one function that passes in the key to the object the image URL will be assigned to
+    fetchNextImage() {
         fetch('http://localhost:10000/image')
         .then(res => {
             return res.blob();
         })
         .then(resBlob => {
-            let currentImageObjectURL = this.state.nextImage;
-            this.setState({
-                nextImage: URL.createObjectURL(resBlob)
-            });
-            URL.revokeObjectURL(currentImageObjectURL);
+            let newImageObjectUrl = URL.createObjectURL(resBlob);
+            resolveExif(newImageObjectUrl)
+            .then(orientedImageUrl => {
+                URL.revokeObjectURL(this.state.nextImage);
+                this.setState({
+                    nextImage: orientedImageUrl
+                });
+            })
         })
     }
 
@@ -57,11 +61,16 @@ class ImageHolder extends React.Component {
             return res.blob();
         })
         .then(resBlob => {
-            this.setState({
-                currentImage: URL.createObjectURL(resBlob)
-            });
+            let newImageObjectUrl = URL.createObjectURL(resBlob);
+            resolveExif(newImageObjectUrl)
+            .then(orientedImage => {
+                this.setState({
+                    currentImage: orientedImage
+                });
+            })
         })
         this.fetchNextImage();
+        document.addEventListener('keyup', this.switchImage.bind(this));
     }
 
     generateBackgroundColor() {
@@ -76,7 +85,7 @@ class ImageHolder extends React.Component {
 
     render() {
         return(
-            <div style={Object.assign({}, outerDivStyle, {backgroundColor: this.state.containerBackgroundColor})} onClick={this.switchImage.bind(this)}>
+            <div style={Object.assign({}, outerDivStyle, {backgroundColor: this.state.containerBackgroundColor})}>
                 <img onClick={this.switchImage.bind(this)} src={this.state.currentImage} alt='something for Nora' style={imageBoxStyle} />
             </div>
         );

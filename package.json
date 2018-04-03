@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "blueimp-load-image": "^2.19.0",
+    "exif-js": "^2.3.0",
+    "exif-normalizer-blob": "^1.0.7",
     "react": "^16.3.0",
     "react-dom": "^16.3.0",
     "react-router": "^4.2.0",
